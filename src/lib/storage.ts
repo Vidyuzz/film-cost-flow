@@ -499,6 +499,84 @@ class StorageManager {
     });
   }
 
+  // Update vendor
+  updateVendor(id: string, updates: Partial<Omit<Vendor, 'id' | 'createdAt'>>): Vendor {
+    const vendors = this.getItem<Vendor>(KEYS.vendors);
+    const index = vendors.findIndex(v => v.id === id);
+    if (index === -1) throw new Error('Vendor not found');
+    
+    vendors[index] = { ...vendors[index], ...updates };
+    this.setItem(KEYS.vendors, vendors);
+    return vendors[index];
+  }
+
+  // Delete vendor
+  deleteVendor(id: string): void {
+    const vendors = this.getItem<Vendor>(KEYS.vendors);
+    const filtered = vendors.filter(v => v.id !== id);
+    this.setItem(KEYS.vendors, filtered);
+  }
+
+  // Update department
+  updateDepartment(id: string, updates: Partial<Omit<Department, 'id' | 'projectId' | 'createdAt'>>): Department {
+    const departments = this.getItem<Department>(KEYS.departments);
+    const index = departments.findIndex(d => d.id === id);
+    if (index === -1) throw new Error('Department not found');
+    
+    departments[index] = { ...departments[index], ...updates };
+    this.setItem(KEYS.departments, departments);
+    return departments[index];
+  }
+
+  // Delete department  
+  deleteDepartment(id: string): void {
+    const departments = this.getItem<Department>(KEYS.departments);
+    const filtered = departments.filter(d => d.id !== id);
+    this.setItem(KEYS.departments, filtered);
+  }
+
+  // Update budget line
+  updateBudgetLine(id: string, updates: Partial<Omit<BudgetLine, 'id' | 'projectId' | 'departmentId' | 'createdAt'>>): BudgetLine {
+    const budgetLines = this.getItem<BudgetLine>(KEYS.budgetLines);
+    const index = budgetLines.findIndex(b => b.id === id);
+    if (index === -1) throw new Error('Budget line not found');
+    
+    budgetLines[index] = { ...budgetLines[index], ...updates };
+    this.setItem(KEYS.budgetLines, budgetLines);
+    return budgetLines[index];
+  }
+
+  // Delete budget line
+  deleteBudgetLine(id: string): void {
+    const budgetLines = this.getItem<BudgetLine>(KEYS.budgetLines);
+    const filtered = budgetLines.filter(b => b.id !== id);
+    this.setItem(KEYS.budgetLines, filtered);
+  }
+
+  // Update petty cash float
+  updatePettyCashFloat(id: string, updates: Partial<Omit<PettyCashFloat, 'id' | 'projectId' | 'ownerUserId' | 'issuedAmount' | 'issuedAt' | 'createdAt'>>): PettyCashFloat {
+    const floats = this.getItem<PettyCashFloat>(KEYS.pettyCashFloats);
+    const index = floats.findIndex(f => f.id === id);
+    if (index === -1) throw new Error('Petty cash float not found');
+    
+    floats[index] = { ...floats[index], ...updates };
+    this.setItem(KEYS.pettyCashFloats, floats);
+    return floats[index];
+  }
+
+  // Initialize storage with demo data if first time
+  initialize(): void {
+    try {
+      const isFirstTime = !localStorage.getItem(getStorageKey('initialized'));
+      if (isFirstTime) {
+        this.createDemoData();
+        localStorage.setItem(getStorageKey('initialized'), 'true');
+      }
+    } catch (error) {
+      console.error('Storage initialization failed:', error);
+    }
+  }
+
   // Clear all data (for testing)
   clearAllData(): void {
     Object.values(KEYS).forEach(key => {

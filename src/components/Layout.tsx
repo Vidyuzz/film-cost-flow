@@ -54,6 +54,12 @@ export const Layout = ({ children }: LayoutProps) => {
       description: "Cash Management" 
     },
     { 
+      name: "Vendors", 
+      href: "/vendors", 
+      icon: Settings,
+      description: "Vendor Management" 
+    },
+    { 
       name: "Reports", 
       href: "/reports", 
       icon: FileText,

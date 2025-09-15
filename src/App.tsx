@@ -11,6 +11,7 @@ import Reports from "./pages/Reports";
 import ProjectNew from "./pages/ProjectNew";
 import ProjectBudget from "./pages/ProjectBudget";
 import AddExpense from "./pages/AddExpense";
+import Vendors from "./pages/Vendors";
 import NotFound from "./pages/NotFound";
 import { storage } from "./lib/storage";
 
@@ -32,6 +33,7 @@ const App = () => {
               <Route path="/expenses" element={<Expenses />} />
               <Route path="/petty-cash" element={<PettyCash />} />
               <Route path="/reports" element={<Reports />} />
+              <Route path="/vendors" element={<Vendors />} />
               <Route path="/project/new" element={<ProjectNew />} />
               <Route path="/project/budget" element={<ProjectBudget />} />
               <Route path="/project/add-expense" element={<AddExpense />} />

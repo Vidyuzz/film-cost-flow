@@ -228,7 +228,8 @@ const AddExpense = () => {
                       name="budgetLineId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Budget Line Item</FormLabel>
+                        <FormLabel>Budget Line Item</FormLabel>
+                        <div className="flex space-x-2">
                           <Select value={field.value || "none"} onValueChange={field.onChange}>
                             <FormControl>
                               <SelectTrigger>
@@ -244,6 +245,16 @@ const AddExpense = () => {
                               ))}
                             </SelectContent>
                           </Select>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => window.open('/project/budget', '_blank')}
+                            title="Manage Budget Lines"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -254,7 +265,8 @@ const AddExpense = () => {
                       name="vendorId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Vendor</FormLabel>
+                        <FormLabel>Vendor</FormLabel>
+                        <div className="flex space-x-2">
                           <Select value={field.value || "none"} onValueChange={field.onChange}>
                             <FormControl>
                               <SelectTrigger>
@@ -270,6 +282,16 @@ const AddExpense = () => {
                               ))}
                             </SelectContent>
                           </Select>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => window.open('/vendors', '_blank')}
+                            title="Manage Vendors"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
                           <FormMessage />
                         </FormItem>
                       )}
