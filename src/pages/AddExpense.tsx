@@ -37,6 +37,9 @@ const AddExpense = () => {
       status: "submitted",
       reimbursable: false,
       description: "",
+      budgetLineId: "none",
+      vendorId: "none", 
+      shootDayId: "none",
     },
   });
 
@@ -79,8 +82,16 @@ const AddExpense = () => {
     setIsSubmitting(true);
 
     try {
-      const newExpense = storage.addExpense({
+      // Clean up the values - convert "none" to undefined for optional fields
+      const cleanedValues = {
         ...values,
+        budgetLineId: values.budgetLineId === "none" ? undefined : values.budgetLineId,
+        vendorId: values.vendorId === "none" ? undefined : values.vendorId,
+        shootDayId: values.shootDayId === "none" ? undefined : values.shootDayId,
+      };
+
+      const newExpense = storage.addExpense({
+        ...cleanedValues,
         projectId: currentProject.id,
       });
 
@@ -99,9 +110,9 @@ const AddExpense = () => {
         reimbursable: false,
         description: "",
         departmentId: "",
-        budgetLineId: "",
-        vendorId: "",
-        shootDayId: "",
+        budgetLineId: "none",
+        vendorId: "none",
+        shootDayId: "none",
       });
       setSelectedDepartment("");
 
@@ -218,14 +229,14 @@ const AddExpense = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Budget Line Item</FormLabel>
-                          <Select value={field.value || ""} onValueChange={field.onChange}>
+                          <Select value={field.value || "none"} onValueChange={field.onChange}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select line item (optional)" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="">No specific line item</SelectItem>
+                              <SelectItem value="none">No specific line item</SelectItem>
                               {budgetLines.map(line => (
                                 <SelectItem key={line.id} value={line.id}>
                                   {line.lineItem} ({currentProject.currency} {line.budgetAmount.toLocaleString()})
@@ -244,14 +255,14 @@ const AddExpense = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Vendor</FormLabel>
-                          <Select value={field.value || ""} onValueChange={field.onChange}>
+                          <Select value={field.value || "none"} onValueChange={field.onChange}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select vendor (optional)" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="">No vendor</SelectItem>
+                              <SelectItem value="none">No vendor</SelectItem>
                               {vendors.map(vendor => (
                                 <SelectItem key={vendor.id} value={vendor.id}>
                                   {vendor.name}
@@ -357,14 +368,14 @@ const AddExpense = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Shoot Day</FormLabel>
-                        <Select value={field.value || ""} onValueChange={field.onChange}>
+                        <Select value={field.value || "none"} onValueChange={field.onChange}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select shoot day (optional)" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">No specific shoot day</SelectItem>
+                            <SelectItem value="none">No specific shoot day</SelectItem>
                             {shootDays.map(day => (
                               <SelectItem key={day.id} value={day.id}>
                                 {new Date(day.date).toLocaleDateString()} - {day.location || 'No location'}
