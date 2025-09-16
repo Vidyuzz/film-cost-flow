@@ -8,7 +8,18 @@ import type {
   Vendor, 
   Expense, 
   PettyCashFloat, 
-  PettyCashTxn 
+  PettyCashTxn,
+  ShootDayExtended,
+  ScheduleItem,
+  Crew,
+  CrewFeedback,
+  Prop,
+  PropCheckout,
+  ExpenseExtended,
+  ProductionDaySummary,
+  ScheduleAdherenceReport,
+  PropsCustodyReport,
+  CrewPerformanceReport
 } from './types';
 
 const STORAGE_VERSION = '1.0';
@@ -20,6 +31,12 @@ const KEYS = {
   departments: 'departments',
   budgetLines: 'budget_lines',
   shootDays: 'shoot_days',
+  shootDaysExtended: 'shoot_days_extended',
+  scheduleItems: 'schedule_items',
+  crew: 'crew',
+  crewFeedback: 'crew_feedback',
+  props: 'props',
+  propCheckouts: 'prop_checkouts',
   vendors: 'vendors',
   expenses: 'expenses',
   pettyCashFloats: 'petty_cash_floats',
@@ -414,7 +431,37 @@ class StorageManager {
       notes: "Principal photography - Interior scenes",
     });
 
-    // Create sample vendors
+    // Create extended shoot day with production details
+    const extendedShootDay = this.addShootDayExtended({
+      projectId: demoProject.id,
+      date: new Date().toISOString().split('T')[0],
+      location: "Studio A, Film City",
+      callTime: "08:00",
+      wrapTime: "18:00",
+      weatherNote: "Clear skies, 25°C",
+      status: "open",
+      notes: "Principal photography - Interior scenes",
+    });
+
+    // Create crew members
+    const crewMembers = [
+      { name: "Rajesh Kumar", role: "Director", contact: "9876543210" },
+      { name: "Priya Sharma", role: "Producer", contact: "9876543211" },
+      { name: "Amit Singh", role: "Cinematographer", contact: "9876543212" },
+      { name: "Sneha Patel", role: "Sound Engineer", contact: "9876543213" },
+      { name: "Vikram Joshi", role: "Assistant Director", contact: "9876543214" },
+    ];
+
+    const createdCrew = crewMembers.map(member => 
+      this.addCrew({
+        projectId: demoProject.id,
+        name: member.name,
+        role: member.role,
+        contact: member.contact,
+      })
+    );
+
+    // Create vendors first (needed for props)
     const vendors = [
       { name: "Camera House Mumbai", gstin: "27AABCU9603R1ZM", contacts: ["9876543210"] },
       { name: "Prime Focus Sound", gstin: "", contacts: ["9876543211"] },
@@ -422,6 +469,145 @@ class StorageManager {
     ];
 
     const createdVendors = vendors.map(vendor => this.addVendor(vendor));
+
+    // Create props
+    const props = [
+      { name: "Canon EOS R5", category: "Camera", serialNo: "CN001", ownerVendorId: createdVendors[0].id },
+      { name: "Rode Microphone", category: "Audio", serialNo: "RD001", ownerVendorId: createdVendors[1].id },
+      { name: "LED Panel Light", category: "Lighting", serialNo: "LP001", ownerVendorId: createdVendors[0].id },
+      { name: "Tripod", category: "Support", serialNo: "TP001", ownerVendorId: createdVendors[0].id },
+    ];
+
+    const createdProps = props.map(prop => 
+      this.addProp({
+        projectId: demoProject.id,
+        name: prop.name,
+        category: prop.category,
+        serialNo: prop.serialNo,
+        ownerVendorId: prop.ownerVendorId,
+        notes: "Professional grade equipment",
+      })
+    );
+
+    // Create schedule items
+    const scheduleItems = [
+      {
+        scene: "Scene 1",
+        shot: "Shot A",
+        description: "Opening dialogue between protagonist and antagonist",
+        plannedStart: "09:00",
+        plannedEnd: "10:30",
+        actualStart: "09:15",
+        actualEnd: "10:45",
+        assignees: ["Rajesh Kumar", "Amit Singh"],
+        status: "done" as const,
+        notes: "Slight delay due to lighting setup",
+      },
+      {
+        scene: "Scene 1",
+        shot: "Shot B",
+        description: "Close-up reaction shot",
+        plannedStart: "10:30",
+        plannedEnd: "11:00",
+        actualStart: "10:45",
+        actualEnd: "11:15",
+        assignees: ["Amit Singh", "Sneha Patel"],
+        status: "done" as const,
+        notes: "Completed on time",
+      },
+      {
+        scene: "Scene 2",
+        shot: "Shot A",
+        description: "Establishing shot of location",
+        plannedStart: "11:00",
+        plannedEnd: "12:00",
+        assignees: ["Amit Singh", "Vikram Joshi"],
+        status: "in_progress" as const,
+        notes: "Currently shooting",
+      },
+      {
+        scene: "Scene 2",
+        shot: "Shot B",
+        description: "Wide angle action sequence",
+        plannedStart: "12:00",
+        plannedEnd: "13:30",
+        assignees: ["Rajesh Kumar", "Amit Singh", "Sneha Patel"],
+        status: "planned" as const,
+        notes: "Scheduled for after lunch",
+      },
+    ];
+
+    scheduleItems.forEach(item => {
+      this.addScheduleItem({
+        ...item,
+        shootDayId: extendedShootDay.id,
+      });
+    });
+
+    // Create crew feedback
+    const feedbackItems = [
+      {
+        crewId: createdCrew[0].id,
+        isAnonymous: false,
+        rating: 4,
+        tags: ["coordination", "setup"],
+        notes: "Good communication, but lighting setup took longer than expected",
+      },
+      {
+        crewId: createdCrew[1].id,
+        isAnonymous: false,
+        rating: 5,
+        tags: ["comms"],
+        notes: "Excellent coordination and clear instructions",
+      },
+      {
+        isAnonymous: true,
+        rating: 3,
+        tags: ["delays", "sound"],
+        notes: "Some audio issues with background noise",
+      },
+    ];
+
+    feedbackItems.forEach(feedback => {
+      this.addCrewFeedback({
+        ...feedback,
+        shootDayId: extendedShootDay.id,
+      });
+    });
+
+    // Create prop checkouts
+    const propCheckouts = [
+      {
+        propId: createdProps[0].id,
+        checkedOutBy: "Amit Singh",
+        dueReturn: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        checkoutCondition: "Excellent condition, fully functional",
+        status: "out" as const,
+      },
+      {
+        propId: createdProps[1].id,
+        checkedOutBy: "Sneha Patel",
+        dueReturn: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        checkoutCondition: "Good condition, minor wear",
+        status: "out" as const,
+      },
+      {
+        propId: createdProps[2].id,
+        checkedOutBy: "Vikram Joshi",
+        dueReturn: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        checkoutCondition: "Good condition",
+        status: "overdue" as const,
+      },
+    ];
+
+    propCheckouts.forEach(checkout => {
+      this.addPropCheckout({
+        ...checkout,
+        shootDayId: extendedShootDay.id,
+      });
+    });
+
+    // Vendors already created above
 
     // Create sample expenses
     const sampleExpenses = [
@@ -575,6 +761,493 @@ class StorageManager {
     } catch (error) {
       console.error('Storage initialization failed:', error);
     }
+  }
+
+  // Production Day Ops - Shoot Day Extended operations
+  getShootDaysExtended(projectId?: string): ShootDayExtended[] {
+    const shootDays = this.getItem<ShootDayExtended>(KEYS.shootDaysExtended);
+    return projectId 
+      ? shootDays.filter(s => s.projectId === projectId).sort((a, b) => a.date.localeCompare(b.date))
+      : shootDays;
+  }
+
+  addShootDayExtended(shootDayData: Omit<ShootDayExtended, 'id' | 'createdAt'>): ShootDayExtended {
+    const shootDays = this.getShootDaysExtended();
+    const newShootDay: ShootDayExtended = {
+      ...shootDayData,
+      id: generateId(),
+      createdAt: getCurrentTimestamp(),
+    };
+    
+    shootDays.push(newShootDay);
+    this.setItem(KEYS.shootDaysExtended, shootDays);
+    return newShootDay;
+  }
+
+  updateShootDayExtended(id: string, updates: Partial<Omit<ShootDayExtended, 'id' | 'createdAt'>>): ShootDayExtended | null {
+    const shootDays = this.getShootDaysExtended();
+    const index = shootDays.findIndex(s => s.id === id);
+    
+    if (index === -1) return null;
+    
+    shootDays[index] = { ...shootDays[index], ...updates };
+    this.setItem(KEYS.shootDaysExtended, shootDays);
+    return shootDays[index];
+  }
+
+  getShootDayExtended(id: string): ShootDayExtended | null {
+    const shootDays = this.getShootDaysExtended();
+    return shootDays.find(s => s.id === id) || null;
+  }
+
+  // Schedule Items operations
+  getScheduleItems(shootDayId?: string): ScheduleItem[] {
+    const items = this.getItem<ScheduleItem>(KEYS.scheduleItems);
+    return shootDayId 
+      ? items.filter(i => i.shootDayId === shootDayId).sort((a, b) => a.plannedStart?.localeCompare(b.plannedStart || '') || 0)
+      : items;
+  }
+
+  addScheduleItem(itemData: Omit<ScheduleItem, 'id' | 'createdAt'>): ScheduleItem {
+    const items = this.getScheduleItems();
+    const newItem: ScheduleItem = {
+      ...itemData,
+      id: generateId(),
+      createdAt: getCurrentTimestamp(),
+    };
+    
+    items.push(newItem);
+    this.setItem(KEYS.scheduleItems, items);
+    return newItem;
+  }
+
+  updateScheduleItem(id: string, updates: Partial<Omit<ScheduleItem, 'id' | 'createdAt'>>): ScheduleItem | null {
+    const items = this.getScheduleItems();
+    const index = items.findIndex(i => i.id === id);
+    
+    if (index === -1) return null;
+    
+    items[index] = { ...items[index], ...updates };
+    this.setItem(KEYS.scheduleItems, items);
+    return items[index];
+  }
+
+  deleteScheduleItem(id: string): void {
+    const items = this.getScheduleItems();
+    const filtered = items.filter(i => i.id !== id);
+    this.setItem(KEYS.scheduleItems, filtered);
+  }
+
+  // Crew operations
+  getCrew(projectId?: string): Crew[] {
+    const crew = this.getItem<Crew>(KEYS.crew);
+    return projectId 
+      ? crew.filter(c => c.projectId === projectId)
+      : crew;
+  }
+
+  addCrew(crewData: Omit<Crew, 'id' | 'createdAt'>): Crew {
+    const crew = this.getCrew();
+    const newCrew: Crew = {
+      ...crewData,
+      id: generateId(),
+      createdAt: getCurrentTimestamp(),
+    };
+    
+    crew.push(newCrew);
+    this.setItem(KEYS.crew, crew);
+    return newCrew;
+  }
+
+  updateCrew(id: string, updates: Partial<Omit<Crew, 'id' | 'createdAt'>>): Crew | null {
+    const crew = this.getCrew();
+    const index = crew.findIndex(c => c.id === id);
+    
+    if (index === -1) return null;
+    
+    crew[index] = { ...crew[index], ...updates };
+    this.setItem(KEYS.crew, crew);
+    return crew[index];
+  }
+
+  deleteCrew(id: string): void {
+    const crew = this.getCrew();
+    const filtered = crew.filter(c => c.id !== id);
+    this.setItem(KEYS.crew, filtered);
+  }
+
+  // Crew Feedback operations
+  getCrewFeedback(shootDayId?: string): CrewFeedback[] {
+    const feedback = this.getItem<CrewFeedback>(KEYS.crewFeedback);
+    return shootDayId 
+      ? feedback.filter(f => f.shootDayId === shootDayId).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      : feedback;
+  }
+
+  addCrewFeedback(feedbackData: Omit<CrewFeedback, 'id' | 'createdAt'>): CrewFeedback {
+    const feedback = this.getCrewFeedback();
+    const newFeedback: CrewFeedback = {
+      ...feedbackData,
+      id: generateId(),
+      createdAt: getCurrentTimestamp(),
+    };
+    
+    feedback.push(newFeedback);
+    this.setItem(KEYS.crewFeedback, feedback);
+    return newFeedback;
+  }
+
+  updateCrewFeedback(id: string, updates: Partial<Omit<CrewFeedback, 'id' | 'createdAt'>>): CrewFeedback | null {
+    const feedback = this.getCrewFeedback();
+    const index = feedback.findIndex(f => f.id === id);
+    
+    if (index === -1) return null;
+    
+    feedback[index] = { ...feedback[index], ...updates };
+    this.setItem(KEYS.crewFeedback, feedback);
+    return feedback[index];
+  }
+
+  // Props operations
+  getProps(projectId?: string): Prop[] {
+    const props = this.getItem<Prop>(KEYS.props);
+    return projectId 
+      ? props.filter(p => p.projectId === projectId)
+      : props;
+  }
+
+  addProp(propData: Omit<Prop, 'id' | 'createdAt'>): Prop {
+    const props = this.getProps();
+    const newProp: Prop = {
+      ...propData,
+      id: generateId(),
+      createdAt: getCurrentTimestamp(),
+    };
+    
+    props.push(newProp);
+    this.setItem(KEYS.props, props);
+    return newProp;
+  }
+
+  updateProp(id: string, updates: Partial<Omit<Prop, 'id' | 'createdAt'>>): Prop | null {
+    const props = this.getProps();
+    const index = props.findIndex(p => p.id === id);
+    
+    if (index === -1) return null;
+    
+    props[index] = { ...props[index], ...updates };
+    this.setItem(KEYS.props, props);
+    return props[index];
+  }
+
+  deleteProp(id: string): void {
+    const props = this.getProps();
+    const filtered = props.filter(p => p.id !== id);
+    this.setItem(KEYS.props, filtered);
+  }
+
+  // Prop Checkout operations
+  getPropCheckouts(shootDayId?: string, status?: string): PropCheckout[] {
+    let checkouts = this.getItem<PropCheckout>(KEYS.propCheckouts);
+    
+    if (shootDayId) {
+      checkouts = checkouts.filter(c => c.shootDayId === shootDayId);
+    }
+    
+    if (status) {
+      checkouts = checkouts.filter(c => c.status === status);
+    }
+    
+    return checkouts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  addPropCheckout(checkoutData: Omit<PropCheckout, 'id' | 'createdAt'>): PropCheckout {
+    const checkouts = this.getPropCheckouts();
+    const newCheckout: PropCheckout = {
+      ...checkoutData,
+      id: generateId(),
+      createdAt: getCurrentTimestamp(),
+    };
+    
+    checkouts.push(newCheckout);
+    this.setItem(KEYS.propCheckouts, checkouts);
+    return newCheckout;
+  }
+
+  updatePropCheckout(id: string, updates: Partial<Omit<PropCheckout, 'id' | 'createdAt'>>): PropCheckout | null {
+    const checkouts = this.getPropCheckouts();
+    const index = checkouts.findIndex(c => c.id === id);
+    
+    if (index === -1) return null;
+    
+    checkouts[index] = { ...checkouts[index], ...updates };
+    this.setItem(KEYS.propCheckouts, checkouts);
+    return checkouts[index];
+  }
+
+  // Analytics for Production Day
+  getProductionDaySummary(shootDayId: string): ProductionDaySummary | null {
+    const shootDay = this.getShootDayExtended(shootDayId);
+    if (!shootDay) return null;
+
+    const expenses = this.getExpenses(shootDay.projectId, { shootDayId });
+    const scheduleItems = this.getScheduleItems(shootDayId);
+    const crewFeedback = this.getCrewFeedback(shootDayId);
+    const propCheckouts = this.getPropCheckouts(shootDayId);
+
+    const totalSpent = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const departments = this.getDepartments(shootDay.projectId);
+    const totalBudget = departments.reduce((sum, d) => sum + d.budgetAmount, 0);
+    const variance = totalSpent - totalBudget;
+    const variancePercent = totalBudget > 0 ? (variance / totalBudget) * 100 : 0;
+
+    const scheduleProgress = {
+      total: scheduleItems.length,
+      completed: scheduleItems.filter(i => i.status === 'done').length,
+      inProgress: scheduleItems.filter(i => i.status === 'in_progress').length,
+      dropped: scheduleItems.filter(i => i.status === 'dropped').length,
+      percentage: scheduleItems.length > 0 ? (scheduleItems.filter(i => i.status === 'done').length / scheduleItems.length) * 100 : 0,
+    };
+
+    const crewFeedbackSummary = {
+      totalResponses: crewFeedback.length,
+      averageRating: crewFeedback.length > 0 ? crewFeedback.reduce((sum, f) => sum + f.rating, 0) / crewFeedback.length : 0,
+      topIssues: this.getTopFeedbackTags(crewFeedback),
+    };
+
+    const propsStatus = {
+      total: propCheckouts.length,
+      checkedOut: propCheckouts.filter(c => c.status === 'out').length,
+      returned: propCheckouts.filter(c => c.status === 'returned').length,
+      overdue: propCheckouts.filter(c => c.status === 'overdue').length,
+    };
+
+    return {
+      shootDayId,
+      date: shootDay.date,
+      location: shootDay.location || '',
+      callTime: shootDay.callTime || '',
+      wrapTime: shootDay.wrapTime || '',
+      status: shootDay.status,
+      totalBudget,
+      totalSpent,
+      variance,
+      variancePercent,
+      scheduleProgress,
+      crewFeedback: crewFeedbackSummary,
+      propsStatus,
+    };
+  }
+
+  getScheduleAdherenceReport(shootDayId: string): ScheduleAdherenceReport | null {
+    const shootDay = this.getShootDayExtended(shootDayId);
+    if (!shootDay) return null;
+
+    const scheduleItems = this.getScheduleItems(shootDayId);
+    const completedShots = scheduleItems.filter(i => i.status === 'done').length;
+    const droppedShots = scheduleItems.filter(i => i.status === 'dropped').length;
+    const completionPercentage = scheduleItems.length > 0 ? (completedShots / scheduleItems.length) * 100 : 0;
+
+    // Calculate time variances
+    let overTime = 0;
+    let underTime = 0;
+    let totalDelay = 0;
+    const blockedReasons: string[] = [];
+    const delayReasons: Record<string, { count: number; totalDelay: number }> = {};
+
+    scheduleItems.forEach(item => {
+      if (item.plannedStart && item.plannedEnd && item.actualStart && item.actualEnd) {
+        const plannedDuration = this.timeToMinutes(item.plannedEnd) - this.timeToMinutes(item.plannedStart);
+        const actualDuration = this.timeToMinutes(item.actualEnd) - this.timeToMinutes(item.actualStart);
+        const variance = actualDuration - plannedDuration;
+        
+        if (variance > 0) {
+          overTime += variance;
+          totalDelay += variance;
+        } else {
+          underTime += Math.abs(variance);
+        }
+
+        if (item.notes && item.notes.toLowerCase().includes('delay')) {
+          const reason = item.notes.split('delay')[1]?.trim() || 'Unknown delay';
+          blockedReasons.push(reason);
+          if (!delayReasons[reason]) {
+            delayReasons[reason] = { count: 0, totalDelay: 0 };
+          }
+          delayReasons[reason].count++;
+          delayReasons[reason].totalDelay += Math.abs(variance);
+        }
+      }
+    });
+
+    const topDelays = Object.entries(delayReasons)
+      .map(([reason, data]) => ({
+        reason,
+        count: data.count,
+        totalDelay: data.totalDelay,
+      }))
+      .sort((a, b) => b.totalDelay - a.totalDelay)
+      .slice(0, 5);
+
+    return {
+      shootDayId,
+      date: shootDay.date,
+      totalShots: scheduleItems.length,
+      completedShots,
+      droppedShots,
+      completionPercentage,
+      timeVariance: {
+        overTime,
+        underTime,
+        averageDelay: scheduleItems.length > 0 ? totalDelay / scheduleItems.length : 0,
+      },
+      blockedReasons: [...new Set(blockedReasons)],
+      topDelays,
+    };
+  }
+
+  getPropsCustodyReport(shootDayId: string): PropsCustodyReport | null {
+    const shootDay = this.getShootDayExtended(shootDayId);
+    if (!shootDay) return null;
+
+    const propCheckouts = this.getPropCheckouts(shootDayId);
+    const props = this.getProps();
+    const today = new Date().toISOString().split('T')[0];
+
+    const openCheckouts = propCheckouts
+      .filter(c => c.status === 'out')
+      .map(c => {
+        const prop = props.find(p => p.id === c.propId);
+        const dueDate = new Date(c.dueReturn);
+        const todayDate = new Date(today);
+        const daysOverdue = Math.max(0, Math.ceil((todayDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)));
+        
+        return {
+          propName: prop?.name || 'Unknown Prop',
+          checkedOutBy: c.checkedOutBy,
+          dueReturn: c.dueReturn,
+          daysOverdue,
+          condition: c.checkoutCondition || 'Good',
+        };
+      });
+
+    const overdueReturns = propCheckouts
+      .filter(c => c.status === 'overdue')
+      .map(c => {
+        const prop = props.find(p => p.id === c.propId);
+        const dueDate = new Date(c.dueReturn);
+        const todayDate = new Date(today);
+        const daysOverdue = Math.max(0, Math.ceil((todayDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)));
+        
+        return {
+          propName: prop?.name || 'Unknown Prop',
+          checkedOutBy: c.checkedOutBy,
+          dueReturn: c.dueReturn,
+          daysOverdue,
+        };
+      });
+
+    const returnedToday = propCheckouts
+      .filter(c => c.status === 'returned' && c.returnedAt?.startsWith(today))
+      .map(c => {
+        const prop = props.find(p => p.id === c.propId);
+        return {
+          propName: prop?.name || 'Unknown Prop',
+          returnedBy: c.checkedOutBy, // Assuming same person returned
+          returnCondition: c.returnCondition || 'Good',
+          returnedAt: c.returnedAt || '',
+        };
+      });
+
+    return {
+      shootDayId,
+      date: shootDay.date,
+      openCheckouts,
+      overdueReturns,
+      returnedToday,
+    };
+  }
+
+  getCrewPerformanceReport(shootDayId: string): CrewPerformanceReport | null {
+    const shootDay = this.getShootDayExtended(shootDayId);
+    if (!shootDay) return null;
+
+    const crewFeedback = this.getCrewFeedback(shootDayId);
+    const totalResponses = crewFeedback.length;
+    
+    if (totalResponses === 0) {
+      return {
+        shootDayId,
+        date: shootDay.date,
+        totalResponses: 0,
+        averageRating: 0,
+        ratingDistribution: [],
+        topIssues: [],
+        anonymousResponses: 0,
+        namedResponses: 0,
+      };
+    }
+
+    const averageRating = crewFeedback.reduce((sum, f) => sum + f.rating, 0) / totalResponses;
+    
+    // Rating distribution
+    const ratingDistribution = [1, 2, 3, 4, 5].map(rating => {
+      const count = crewFeedback.filter(f => f.rating === rating).length;
+      return {
+        rating,
+        count,
+        percentage: (count / totalResponses) * 100,
+      };
+    });
+
+    // Top issues from tags
+    const allTags = crewFeedback.flatMap(f => f.tags);
+    const tagCounts: Record<string, number> = {};
+    allTags.forEach(tag => {
+      tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+    });
+
+    const topIssues = Object.entries(tagCounts)
+      .map(([tag, count]) => ({
+        tag,
+        count,
+        percentage: (count / totalResponses) * 100,
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    const anonymousResponses = crewFeedback.filter(f => f.isAnonymous).length;
+    const namedResponses = totalResponses - anonymousResponses;
+
+    return {
+      shootDayId,
+      date: shootDay.date,
+      totalResponses,
+      averageRating,
+      ratingDistribution,
+      topIssues,
+      anonymousResponses,
+      namedResponses,
+    };
+  }
+
+  // Helper methods
+  private getTopFeedbackTags(feedback: CrewFeedback[]): string[] {
+    const allTags = feedback.flatMap(f => f.tags);
+    const tagCounts: Record<string, number> = {};
+    allTags.forEach(tag => {
+      tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+    });
+
+    return Object.entries(tagCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([tag]) => tag);
+  }
+
+  private timeToMinutes(timeStr: string): number {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
   }
 
   // Clear all data (for testing)

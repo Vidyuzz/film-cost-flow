@@ -11,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { ArrowLeft, Receipt, Plus, Calendar } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { ArrowLeft, Receipt, Plus, Calendar, Save, X } from "lucide-react";
 import { storage } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
 import { ExpenseCreateSchema } from "@/lib/types";
@@ -26,10 +27,19 @@ const AddExpense = () => {
   const [budgetLines, setBudgetLines] = useState<BudgetLine[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Dialog states
+  const [showBudgetLineDialog, setShowBudgetLineDialog] = useState(false);
+  const [showVendorDialog, setShowVendorDialog] = useState(false);
+  
+  // Form states for quick creation
+  const [newBudgetLine, setNewBudgetLine] = useState({ lineItem: "", budgetAmount: "" });
+  const [newVendor, setNewVendor] = useState({ name: "", gstin: "", contacts: "" });
 
   const form = useForm<z.infer<typeof ExpenseCreateSchema>>({
     resolver: zodResolver(ExpenseCreateSchema),
     defaultValues: {
+      projectId: "", // Will be set when project is loaded
       date: new Date().toISOString().split('T')[0],
       amount: 0,
       taxRate: 18,
@@ -37,6 +47,7 @@ const AddExpense = () => {
       status: "submitted",
       reimbursable: false,
       description: "",
+      departmentId: "",
       budgetLineId: "none",
       vendorId: "none", 
       shootDayId: "none",
@@ -49,6 +60,9 @@ const AddExpense = () => {
       const project = storage.getProject(projectId);
       setCurrentProject(project);
       
+      // Set the projectId in the form
+      form.setValue("projectId", projectId);
+      
       const depts = storage.getDepartments(projectId);
       setDepartments(depts);
       
@@ -58,7 +72,7 @@ const AddExpense = () => {
       const projectShootDays = storage.getShootDays(projectId);
       setShootDays(projectShootDays);
     }
-  }, []);
+  }, [form]);
 
   useEffect(() => {
     if (selectedDepartment && currentProject) {
@@ -70,6 +84,8 @@ const AddExpense = () => {
   }, [selectedDepartment, currentProject]);
 
   const onSubmit = async (values: z.infer<typeof ExpenseCreateSchema>) => {
+    console.log("Form submitted with values:", values);
+    
     if (!currentProject) {
       toast({
         title: "Error",
@@ -90,10 +106,7 @@ const AddExpense = () => {
         shootDayId: values.shootDayId === "none" ? undefined : values.shootDayId,
       };
 
-      const newExpense = storage.addExpense({
-        ...cleanedValues,
-        projectId: currentProject.id,
-      });
+      const newExpense = storage.addExpense(cleanedValues);
 
       toast({
         title: "Expense Added",
@@ -102,6 +115,7 @@ const AddExpense = () => {
 
       // Reset form
       form.reset({
+        projectId: currentProject.id,
         date: new Date().toISOString().split('T')[0],
         amount: 0,
         taxRate: 18,
@@ -122,6 +136,7 @@ const AddExpense = () => {
       }, 1000);
 
     } catch (error) {
+      console.error("Error adding expense:", error);
       toast({
         title: "Error",
         description: "Failed to add expense. Please try again.",
@@ -129,6 +144,100 @@ const AddExpense = () => {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Add form error handling
+  const onError = (errors: any) => {
+    console.log("Form validation errors:", errors);
+    toast({
+      title: "Validation Error",
+      description: "Please check the form for errors and try again.",
+      variant: "destructive",
+    });
+  };
+
+  const handleCreateBudgetLine = () => {
+    const departmentId = form.getValues("departmentId");
+    if (!currentProject || !departmentId || !newBudgetLine.lineItem || !newBudgetLine.budgetAmount) {
+      toast({
+        title: "Validation Error",
+        description: "Please select a department and fill in all budget line fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const budgetLine = storage.addBudgetLine({
+        projectId: currentProject.id,
+        departmentId: departmentId,
+        lineItem: newBudgetLine.lineItem,
+        budgetAmount: parseFloat(newBudgetLine.budgetAmount),
+      });
+
+      // Update the budget lines list
+      setBudgetLines(prev => [...prev, budgetLine]);
+      
+      // Set the new budget line as selected
+      form.setValue("budgetLineId", budgetLine.id);
+      
+      // Reset form and close dialog
+      setNewBudgetLine({ lineItem: "", budgetAmount: "" });
+      setShowBudgetLineDialog(false);
+      
+      toast({
+        title: "Budget line created",
+        description: "New budget line has been created and selected.",
+      });
+    } catch (error) {
+      console.error("Error creating budget line:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create budget line. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCreateVendor = () => {
+    if (!newVendor.name) {
+      toast({
+        title: "Validation Error",
+        description: "Vendor name is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const vendor = storage.addVendor({
+        name: newVendor.name,
+        gstin: newVendor.gstin,
+        contacts: newVendor.contacts ? [newVendor.contacts] : [],
+      });
+
+      // Update the vendors list
+      setVendors(prev => [...prev, vendor]);
+      
+      // Set the new vendor as selected
+      form.setValue("vendorId", vendor.id);
+      
+      // Reset form and close dialog
+      setNewVendor({ name: "", gstin: "", contacts: "" });
+      setShowVendorDialog(false);
+      
+      toast({
+        title: "Vendor created",
+        description: "New vendor has been created and selected.",
+      });
+    } catch (error) {
+      console.error("Error creating vendor:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create vendor. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -174,7 +283,7 @@ const AddExpense = () => {
             </CardHeader>
             <CardContent>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit, onError)} className="space-y-6">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <FormField
                       control={form.control}
@@ -249,8 +358,8 @@ const AddExpense = () => {
                             type="button"
                             variant="outline"
                             size="icon"
-                            onClick={() => window.open('/project/budget', '_blank')}
-                            title="Manage Budget Lines"
+                            onClick={() => setShowBudgetLineDialog(true)}
+                            title="Add New Budget Line"
                           >
                             <Plus className="h-4 w-4" />
                           </Button>
@@ -286,8 +395,8 @@ const AddExpense = () => {
                             type="button"
                             variant="outline"
                             size="icon"
-                            onClick={() => window.open('/vendors', '_blank')}
-                            title="Manage Vendors"
+                            onClick={() => setShowVendorDialog(true)}
+                            title="Add New Vendor"
                           >
                             <Plus className="h-4 w-4" />
                           </Button>
@@ -483,6 +592,94 @@ const AddExpense = () => {
           </Card>
         </div>
       </div>
+
+      {/* Budget Line Creation Dialog */}
+      <Dialog open={showBudgetLineDialog} onOpenChange={setShowBudgetLineDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Budget Line</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="lineItem">Line Item *</Label>
+              <Input
+                id="lineItem"
+                value={newBudgetLine.lineItem}
+                onChange={(e) => setNewBudgetLine({ ...newBudgetLine, lineItem: e.target.value })}
+                placeholder="e.g., Camera Equipment, Catering"
+              />
+            </div>
+            <div>
+              <Label htmlFor="budgetAmount">Budget Amount *</Label>
+              <Input
+                id="budgetAmount"
+                type="number"
+                step="0.01"
+                min="0"
+                value={newBudgetLine.budgetAmount}
+                onChange={(e) => setNewBudgetLine({ ...newBudgetLine, budgetAmount: e.target.value })}
+                placeholder="Enter budget amount"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowBudgetLineDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateBudgetLine}>
+              <Save className="h-4 w-4 mr-2" />
+              Create Budget Line
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Vendor Creation Dialog */}
+      <Dialog open={showVendorDialog} onOpenChange={setShowVendorDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Vendor</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="vendorName">Vendor Name *</Label>
+              <Input
+                id="vendorName"
+                value={newVendor.name}
+                onChange={(e) => setNewVendor({ ...newVendor, name: e.target.value })}
+                placeholder="e.g., Camera House Mumbai"
+              />
+            </div>
+            <div>
+              <Label htmlFor="gstin">GSTIN</Label>
+              <Input
+                id="gstin"
+                value={newVendor.gstin}
+                onChange={(e) => setNewVendor({ ...newVendor, gstin: e.target.value })}
+                placeholder="GSTIN number (optional)"
+              />
+            </div>
+            <div>
+              <Label htmlFor="contacts">Contact</Label>
+              <Input
+                id="contacts"
+                value={newVendor.contacts}
+                onChange={(e) => setNewVendor({ ...newVendor, contacts: e.target.value })}
+                placeholder="Phone number or email (optional)"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowVendorDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateVendor}>
+              <Save className="h-4 w-4 mr-2" />
+              Create Vendor
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

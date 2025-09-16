@@ -14,7 +14,8 @@ import {
   Calendar,
   Download,
   Camera,
-  Users
+  Users,
+  Play
 } from "lucide-react";
 import { storage } from "@/lib/storage";
 import { analytics } from "@/lib/analytics";
@@ -113,10 +114,26 @@ const Dashboard = () => {
           </p>
         </div>
         
-        <Button onClick={handleGenerateDCR} className="flex items-center space-x-2">
-          <Download className="h-4 w-4" />
-          <span>Generate DCR PDF</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={handleGenerateDCR} className="flex items-center space-x-2">
+            <Download className="h-4 w-4" />
+            <span>Generate DCR PDF</span>
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              const shootDays = storage.getShootDaysExtended(currentProject.id);
+              if (shootDays.length > 0) {
+                window.location.href = `/day/${shootDays[0].id}`;
+              }
+            }}
+            className="flex items-center space-x-2"
+          >
+            <Play className="h-4 w-4" />
+            <span>Production Day Hub</span>
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}

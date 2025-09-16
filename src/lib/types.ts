@@ -174,3 +174,236 @@ export interface ExpenseImportRow {
   ShootDay?: string;
   AttachmentFileName?: string;
 }
+
+// Production Day Ops & Reports - New Types
+
+// Enhanced ShootDay with production day details
+export const ShootDayExtendedSchema = z.object({
+  id: z.string(),
+  projectId: z.string(),
+  date: z.string(),
+  location: z.string().optional(),
+  callTime: z.string().optional(), // HH:MM format
+  wrapTime: z.string().optional(), // HH:MM format
+  weatherNote: z.string().optional(),
+  status: z.enum(['open', 'locked']).default('open'),
+  notes: z.string().optional(),
+  createdAt: z.string(),
+});
+
+// Schedule Items (Scenes/Shots)
+export const ScheduleItemSchema = z.object({
+  id: z.string(),
+  shootDayId: z.string(),
+  scene: z.string().min(1, "Scene is required"),
+  shot: z.string().min(1, "Shot is required"),
+  description: z.string().optional(),
+  plannedStart: z.string().optional(), // HH:MM format
+  plannedEnd: z.string().optional(), // HH:MM format
+  actualStart: z.string().optional(), // HH:MM format
+  actualEnd: z.string().optional(), // HH:MM format
+  assignees: z.array(z.string()).default([]), // JSON array of crew member names
+  status: z.enum(['planned', 'in_progress', 'done', 'dropped']).default('planned'),
+  notes: z.string().optional(),
+  createdAt: z.string(),
+});
+
+// Crew Management
+export const CrewSchema = z.object({
+  id: z.string(),
+  projectId: z.string(),
+  name: z.string().min(1, "Crew member name is required"),
+  role: z.string().min(1, "Role is required"),
+  contact: z.string().optional(),
+  createdAt: z.string(),
+});
+
+// Crew Feedback
+export const CrewFeedbackSchema = z.object({
+  id: z.string(),
+  shootDayId: z.string(),
+  crewId: z.string().optional(), // null for anonymous feedback
+  isAnonymous: z.boolean().default(false),
+  rating: z.number().min(1).max(5),
+  tags: z.array(z.string()).default([]), // JSON array of tags
+  notes: z.string().optional(),
+  createdAt: z.string(),
+});
+
+// Props & Rentals
+export const PropSchema = z.object({
+  id: z.string(),
+  projectId: z.string(),
+  name: z.string().min(1, "Prop name is required"),
+  category: z.string().optional(),
+  serialNo: z.string().optional(),
+  ownerVendorId: z.string().optional(),
+  notes: z.string().optional(),
+  createdAt: z.string(),
+});
+
+export const PropCheckoutSchema = z.object({
+  id: z.string(),
+  propId: z.string(),
+  shootDayId: z.string(),
+  checkedOutBy: z.string().min(1, "Checked out by is required"),
+  dueReturn: z.string(), // Date string
+  checkoutCondition: z.string().optional(),
+  checkoutPhotoUri: z.string().optional(),
+  returnedAt: z.string().optional(),
+  returnCondition: z.string().optional(),
+  returnPhotoUri: z.string().optional(),
+  status: z.enum(['out', 'returned', 'overdue']).default('out'),
+  createdAt: z.string(),
+});
+
+// Enhanced Expense with shoot day reference
+export const ExpenseExtendedSchema = ExpenseSchema.extend({
+  shootDayId: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+// Production Day Summary
+export interface ProductionDaySummary {
+  shootDayId: string;
+  date: string;
+  location: string;
+  callTime: string;
+  wrapTime: string;
+  status: 'open' | 'locked';
+  totalBudget: number;
+  totalSpent: number;
+  variance: number;
+  variancePercent: number;
+  scheduleProgress: {
+    total: number;
+    completed: number;
+    inProgress: number;
+    dropped: number;
+    percentage: number;
+  };
+  crewFeedback: {
+    totalResponses: number;
+    averageRating: number;
+    topIssues: string[];
+  };
+  propsStatus: {
+    total: number;
+    checkedOut: number;
+    returned: number;
+    overdue: number;
+  };
+}
+
+// Schedule Adherence Report
+export interface ScheduleAdherenceReport {
+  shootDayId: string;
+  date: string;
+  totalShots: number;
+  completedShots: number;
+  droppedShots: number;
+  completionPercentage: number;
+  timeVariance: {
+    overTime: number; // minutes
+    underTime: number; // minutes
+    averageDelay: number; // minutes
+  };
+  blockedReasons: string[];
+  topDelays: Array<{
+    reason: string;
+    count: number;
+    totalDelay: number;
+  }>;
+}
+
+// Props Chain of Custody Report
+export interface PropsCustodyReport {
+  shootDayId: string;
+  date: string;
+  openCheckouts: Array<{
+    propName: string;
+    checkedOutBy: string;
+    dueReturn: string;
+    daysOverdue: number;
+    condition: string;
+  }>;
+  overdueReturns: Array<{
+    propName: string;
+    checkedOutBy: string;
+    dueReturn: string;
+    daysOverdue: number;
+  }>;
+  returnedToday: Array<{
+    propName: string;
+    returnedBy: string;
+    returnCondition: string;
+    returnedAt: string;
+  }>;
+}
+
+// Crew Performance Report
+export interface CrewPerformanceReport {
+  shootDayId: string;
+  date: string;
+  totalResponses: number;
+  averageRating: number;
+  ratingDistribution: Array<{
+    rating: number;
+    count: number;
+    percentage: number;
+  }>;
+  topIssues: Array<{
+    tag: string;
+    count: number;
+    percentage: number;
+  }>;
+  anonymousResponses: number;
+  namedResponses: number;
+}
+
+// Export types
+export type ShootDayExtended = z.infer<typeof ShootDayExtendedSchema>;
+export type ScheduleItem = z.infer<typeof ScheduleItemSchema>;
+export type Crew = z.infer<typeof CrewSchema>;
+export type CrewFeedback = z.infer<typeof CrewFeedbackSchema>;
+export type Prop = z.infer<typeof PropSchema>;
+export type PropCheckout = z.infer<typeof PropCheckoutSchema>;
+export type ExpenseExtended = z.infer<typeof ExpenseExtendedSchema>;
+
+// Form schemas for creation/editing
+export const ShootDayExtendedCreateSchema = ShootDayExtendedSchema.omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const ScheduleItemCreateSchema = ScheduleItemSchema.omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const CrewCreateSchema = CrewSchema.omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const CrewFeedbackCreateSchema = CrewFeedbackSchema.omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const PropCreateSchema = PropSchema.omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const PropCheckoutCreateSchema = PropCheckoutSchema.omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export type ShootDayExtendedCreate = z.infer<typeof ShootDayExtendedCreateSchema>;
+export type ScheduleItemCreate = z.infer<typeof ScheduleItemCreateSchema>;
+export type CrewCreate = z.infer<typeof CrewCreateSchema>;
+export type CrewFeedbackCreate = z.infer<typeof CrewFeedbackCreateSchema>;
+export type PropCreate = z.infer<typeof PropCreateSchema>;
+export type PropCheckoutCreate = z.infer<typeof PropCheckoutCreateSchema>;

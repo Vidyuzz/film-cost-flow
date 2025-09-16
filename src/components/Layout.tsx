@@ -11,7 +11,9 @@ import {
   PlusCircle,
   Camera,
   Calendar,
-  Wallet
+  Wallet,
+  Users,
+  Package
 } from "lucide-react";
 import { storage } from "@/lib/storage";
 import type { Project } from "@/lib/types";
@@ -64,6 +66,18 @@ export const Layout = ({ children }: LayoutProps) => {
       href: "/reports", 
       icon: FileText,
       description: "Export & Analytics" 
+    },
+    { 
+      name: "Crew", 
+      href: "/crew", 
+      icon: Users,
+      description: "Team Management" 
+    },
+    { 
+      name: "Props", 
+      href: "/props", 
+      icon: Package,
+      description: "Equipment & Assets" 
     },
   ];
 

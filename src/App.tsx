@@ -12,6 +12,10 @@ import ProjectNew from "./pages/ProjectNew";
 import ProjectBudget from "./pages/ProjectBudget";
 import AddExpense from "./pages/AddExpense";
 import Vendors from "./pages/Vendors";
+import ProductionDayHub from "./pages/ProductionDayHub";
+import ShootDays from "./pages/ShootDays";
+import Crew from "./pages/Crew";
+import Props from "./pages/Props";
 import NotFound from "./pages/NotFound";
 import { storage } from "./lib/storage";
 
@@ -36,7 +40,11 @@ const App = () => {
               <Route path="/vendors" element={<Vendors />} />
               <Route path="/project/new" element={<ProjectNew />} />
               <Route path="/project/budget" element={<ProjectBudget />} />
+              <Route path="/project/shoot-days" element={<ShootDays />} />
+              <Route path="/crew" element={<Crew />} />
+              <Route path="/props" element={<Props />} />
               <Route path="/project/add-expense" element={<AddExpense />} />
+              <Route path="/day/:id" element={<ProductionDayHub />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
