@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { 
   BarChart3, 
   CreditCard, 
@@ -123,6 +124,7 @@ export const Layout = ({ children }: LayoutProps) => {
             </div>
 
             <div className="flex items-center space-x-2">
+              <ThemeToggle />
               {quickActions.map((action) => (
                 <Button 
                   key={action.name}
