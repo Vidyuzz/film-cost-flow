@@ -292,12 +292,8 @@ const ShootDays = () => {
           icon={Calendar}
           title="No Shoot Days"
           description="Create your first shoot day to start managing your production schedule."
-          action={
-            <Button onClick={() => setShowCreateDialog(true)}>
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Add Shoot Day
-            </Button>
-          }
+          actionLabel="Add Shoot Day"
+          onAction={() => setShowCreateDialog(true)}
         />
       ) : (
         <div className="grid gap-4">

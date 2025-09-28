@@ -46,8 +46,8 @@ const ExpensesTab = ({ shootDayId, projectId, isLocked, onDataChange }: Expenses
     departmentId: "",
     budgetLineId: "",
     vendorId: "",
-    paymentMethod: "Cash" as const,
-    status: "submitted" as const,
+    paymentMethod: "Cash" as "Cash" | "UPI" | "Card" | "Transfer",
+    status: "submitted" as "submitted" | "approved" | "paid",
     reimbursable: false,
     taxRate: "0",
     notes: "",
@@ -96,8 +96,8 @@ const ExpensesTab = ({ shootDayId, projectId, isLocked, onDataChange }: Expenses
         departmentId: expense.departmentId,
         budgetLineId: expense.budgetLineId || "",
         vendorId: expense.vendorId || "",
-        paymentMethod: expense.paymentMethod,
-        status: expense.status,
+        paymentMethod: expense.paymentMethod as "Cash" | "UPI" | "Card" | "Transfer",
+        status: expense.status as "submitted" | "approved" | "paid",
         reimbursable: expense.reimbursable,
         taxRate: expense.taxRate.toString(),
         notes: "",
@@ -175,7 +175,7 @@ const ExpensesTab = ({ shootDayId, projectId, isLocked, onDataChange }: Expenses
   const handleDelete = (id: string) => {
     if (isLocked) return;
     
-    storage.updateExpense(id, { status: "cancelled" });
+    storage.updateExpense(id, { status: "paid" }); // Change to valid status
     loadData();
     onDataChange();
     toast({

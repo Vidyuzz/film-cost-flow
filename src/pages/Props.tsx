@@ -283,12 +283,8 @@ const Props = () => {
           icon={Package}
           title="No Props/Equipment"
           description="Add props and equipment to start tracking your production assets."
-          action={
-            <Button onClick={() => setShowCreateDialog(true)}>
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Add Prop
-            </Button>
-          }
+          actionLabel="Add Prop"
+          onAction={() => setShowCreateDialog(true)}
         />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

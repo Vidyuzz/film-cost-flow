@@ -230,12 +230,8 @@ const Crew = () => {
           icon={Users}
           title="No Crew Members"
           description="Add crew members to start building your production team."
-          action={
-            <Button onClick={() => setShowCreateDialog(true)}>
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Add Crew Member
-            </Button>
-          }
+          actionLabel="Add Crew Member"
+          onAction={() => setShowCreateDialog(true)}
         />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

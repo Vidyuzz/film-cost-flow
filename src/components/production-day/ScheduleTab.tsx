@@ -45,7 +45,7 @@ const ScheduleTab = ({ shootDayId, isLocked, onDataChange }: ScheduleTabProps) =
     actualStart: "",
     actualEnd: "",
     assignees: [] as string[],
-    status: "planned" as const,
+    status: "planned" as "planned" | "in_progress" | "done" | "dropped",
     notes: "",
   });
 
@@ -93,7 +93,7 @@ const ScheduleTab = ({ shootDayId, isLocked, onDataChange }: ScheduleTabProps) =
         actualStart: item.actualStart || "",
         actualEnd: item.actualEnd || "",
         assignees: item.assignees,
-        status: item.status,
+        status: item.status as "planned" | "in_progress" | "done" | "dropped",
         notes: item.notes || "",
       });
     } else {
@@ -345,7 +345,7 @@ const ScheduleTab = ({ shootDayId, isLocked, onDataChange }: ScheduleTabProps) =
                   <Label htmlFor="status">Status</Label>
                   <Select
                     value={formData.status}
-                    onValueChange={(value: ScheduleItem['status']) => 
+                    onValueChange={(value: "planned" | "in_progress" | "done" | "dropped") => 
                       setFormData({ ...formData, status: value })
                     }
                   >

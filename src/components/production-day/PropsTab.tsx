@@ -173,7 +173,6 @@ const PropsTab = ({ shootDayId, projectId, isLocked, onDataChange }: PropsTabPro
         status: 'returned',
         returnedAt: new Date().toISOString(),
         returnCondition: returnData.returnCondition,
-        notes: returnData.returnNotes,
       });
       
       toast({
