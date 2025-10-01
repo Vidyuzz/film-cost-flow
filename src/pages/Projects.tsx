@@ -75,7 +75,17 @@ export default function Projects() {
           variant: 'destructive'
         })
       } else {
-        setProjects(data || [])
+        setProjects((data || []).map((p: any) => ({
+          id: p.id,
+          title: p.title,
+          status: p.status,
+          last_activity_at: p.last_activity_at,
+          is_starred: p.is_starred,
+          org_name: p.org_name,
+          poster_url: p.poster_url || null,
+          total_budget: p.total_budget || null,
+          currency: p.currency || 'INR'
+        })))
       }
     } catch (error) {
       console.error('Error loading projects:', error)

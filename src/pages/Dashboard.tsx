@@ -258,24 +258,30 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {topDepartments.map((dept, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="text-sm font-medium">{index + 1}.</div>
-                    <div>
-                      <p className="font-medium">{dept.departmentName}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {dept.percentage.toFixed(1)}% of total spend
+              {topDepartments.map((dept, index) => {
+                const percentage = projectSummary.totalSpent > 0 
+                  ? (dept.actualAmount / projectSummary.totalSpent) * 100 
+                  : 0
+                
+                return (
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="text-sm font-medium">{index + 1}.</div>
+                      <div>
+                        <p className="font-medium">{dept.departmentName}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {percentage.toFixed(1)}% of total spend
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">
+                        {currentProject.currency} {dept.actualAmount.toLocaleString()}
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-medium">
-                      {currentProject.currency} {dept.amount.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </CardContent>
         </Card>

@@ -18,29 +18,37 @@ class Analytics {
     })
     
     const totalSpent = expenses.reduce((sum, expense) => sum + expense.amount, 0)
-    const expenseCount = expenses.length
+    const departments = storage.getDepartments(projectId)
     
-    const departmentBreakdown = expenses.reduce((acc, expense) => {
-      const dept = acc.find(d => d.departmentId === expense.departmentId)
+    const expensesByDepartment = expenses.reduce((acc, expense) => {
+      const dept = acc.find(d => d.departmentName === departments.find(d => d.id === expense.departmentId)?.name)
+      const deptName = departments.find(d => d.id === expense.departmentId)?.name || 'Unknown'
+      
       if (dept) {
-        dept.totalSpent += expense.amount
-        dept.expenseCount += 1
+        dept.amount += expense.amount
+        dept.count += 1
       } else {
         acc.push({
-          departmentId: expense.departmentId,
-          totalSpent: expense.amount,
-          expenseCount: 1
+          departmentName: deptName,
+          amount: expense.amount,
+          count: 1
         })
       }
       return acc
-    }, [] as Array<{ departmentId: string; totalSpent: number; expenseCount: number }>)
+    }, [] as Array<{ departmentName: string; amount: number; count: number }>)
+    
+    const pettyCashTxns = storage.getPettyCashTxns().filter(txn => {
+      const float = storage.getPettyCashFloats(projectId).find(f => f.id === txn.floatId)
+      return float && txn.date === date
+    })
     
     return {
       date,
       projectId,
       totalSpent,
-      departmentBreakdown,
-      expenses
+      expensesByDepartment,
+      expenses,
+      pettyCashTxns
     }
   }
 
@@ -73,16 +81,17 @@ class Analytics {
         actualAmount: deptSpent,
         variance: deptVariance,
         variancePercent: deptBudget > 0 ? (deptVariance / deptBudget) * 100 : 0,
-        percentage: 0 // placeholder
+        expenseCount: deptExpenses.length
       }
     })
     
     return {
       totalBudget,
       totalSpent,
-      variance,
-      variancePercentage,
-      departmentSummaries
+      remainingBudget: variance,
+      variancePercent: variancePercentage,
+      departmentSummaries,
+      expenseCount: expenses.length
     }
   }
 
@@ -115,9 +124,9 @@ class Analytics {
   getBudgetVsActualChartData(projectId: string) {
     const summary = this.getProjectSummary(projectId)
     return summary.departmentSummaries.map(dept => ({
-      name: dept.departmentName,
-      budget: dept.totalBudget,
-      actual: dept.totalSpent,
+      department: dept.departmentName,
+      budget: dept.budgetAmount,
+      actual: dept.actualAmount,
       variance: dept.variance
     }))
   }

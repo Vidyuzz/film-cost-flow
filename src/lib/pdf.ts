@@ -242,10 +242,12 @@ export class PDFService {
       yPosition += 5;
 
       doc.setFontSize(10);
+      const totalAmount = paymentBreakdown.reduce((sum, p) => sum + p.amount, 0)
       paymentBreakdown.forEach(payment => {
+        const percentage = totalAmount > 0 ? (payment.amount / totalAmount) * 100 : 0
         doc.setFont('helvetica', 'normal');
         yPosition = addText(
-          `${payment.method}: ${project.currency} ${payment.amount.toLocaleString()} (${payment.percentage.toFixed(1)}%)`, 
+          `${payment.paymentMethod}: ${project.currency} ${payment.amount.toLocaleString()} (${percentage.toFixed(1)}%)`, 
           20, 
           yPosition
         );
@@ -254,7 +256,9 @@ export class PDFService {
     }
 
     // Reimbursable expenses
-    if (reimbursableExpenses.total > 0) {
+    if (reimbursableExpenses.length > 0) {
+      const totalReimbursable = reimbursableExpenses.reduce((sum, exp) => sum + exp.amount, 0)
+      
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
       yPosition = addText('REIMBURSABLE EXPENSES', 20, yPosition);
@@ -262,8 +266,8 @@ export class PDFService {
 
       doc.setFontSize(12);
       doc.setFont('helvetica', 'normal');
-      yPosition = addText(`Total Reimbursable: ${project.currency} ${reimbursableExpenses.total.toLocaleString()}`, 20, yPosition);
-      yPosition = addText(`Number of Items: ${reimbursableExpenses.count}`, 20, yPosition);
+      yPosition = addText(`Total Reimbursable: ${project.currency} ${totalReimbursable.toLocaleString()}`, 20, yPosition);
+      yPosition = addText(`Number of Items: ${reimbursableExpenses.length}`, 20, yPosition);
     }
 
     // Footer
