@@ -50,9 +50,32 @@ const Dashboard = () => {
     );
   }
 
-  const projectSummary = analytics.getProjectSummary(currentProject.id);
-  const dailyReport = analytics.getDailyCostReport(currentProject.id, selectedDate);
-  const topDepartments = analytics.getTopDepartmentsBySpend(currentProject.id, 3);
+  // Safely get analytics data with error handling
+  let projectSummary, dailyReport, topDepartments;
+  try {
+    projectSummary = analytics.getProjectSummary(currentProject.id);
+    dailyReport = analytics.getDailyCostReport(currentProject.id, selectedDate);
+    topDepartments = analytics.getTopDepartmentsBySpend(currentProject.id, 3);
+  } catch (error) {
+    console.error('Error loading analytics:', error);
+    projectSummary = {
+      totalBudget: 0,
+      totalSpent: 0,
+      remainingBudget: 0,
+      variancePercent: 0,
+      departmentSummaries: [],
+      expenseCount: 0
+    };
+    dailyReport = {
+      date: selectedDate,
+      projectId: currentProject.id,
+      totalSpent: 0,
+      expensesByDepartment: [],
+      expenses: [],
+      pettyCashTxns: []
+    };
+    topDepartments = [];
+  }
   
   // Safely access values with defaults
   const totalSpent = projectSummary?.totalSpent ?? 0;
@@ -253,7 +276,7 @@ const Dashboard = () => {
       </div>
 
       {/* Top Departments */}
-      {topDepartments.length > 0 && (
+      {topDepartments && topDepartments.length > 0 && (
         <Card className="shadow-medium">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
@@ -293,7 +316,7 @@ const Dashboard = () => {
       )}
 
       {/* Budget vs Actual Chart */}
-      {projectSummary.departmentSummaries.length > 0 && (
+      {projectSummary?.departmentSummaries && projectSummary.departmentSummaries.length > 0 && (
         <Card className="shadow-medium">
           <CardHeader>
             <CardTitle>Budget vs Actual by Department</CardTitle>
