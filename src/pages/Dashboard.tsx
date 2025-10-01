@@ -54,6 +54,11 @@ const Dashboard = () => {
   const dailyReport = analytics.getDailyCostReport(currentProject.id, selectedDate);
   const topDepartments = analytics.getTopDepartmentsBySpend(currentProject.id, 3);
   
+  // Safely access values with defaults
+  const totalSpent = projectSummary?.totalSpent ?? 0;
+  const remainingBudget = projectSummary?.remainingBudget ?? 0;
+  const dailySpent = dailyReport?.totalSpent ?? 0;
+  
   const departments = storage.getDepartments(currentProject.id);
   const shootDays = storage.getShootDays(currentProject.id);
   
@@ -199,7 +204,7 @@ const Dashboard = () => {
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">Total Spent</p>
                 <p className="text-2xl font-bold text-foreground">
-                  {currentProject.currency} {projectSummary.totalSpent.toLocaleString()}
+                  {currentProject.currency} {totalSpent.toLocaleString()}
                 </p>
               </div>
             </div>
@@ -213,7 +218,7 @@ const Dashboard = () => {
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">Remaining Budget</p>
                 <p className="text-2xl font-bold text-foreground">
-                  {currentProject.currency} {projectSummary.remainingBudget.toLocaleString()}
+                  {currentProject.currency} {remainingBudget.toLocaleString()}
                 </p>
               </div>
             </div>
@@ -239,7 +244,7 @@ const Dashboard = () => {
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">Daily Total</p>
                 <p className="text-2xl font-bold text-foreground">
-                  {currentProject.currency} {dailyReport.totalSpent.toLocaleString()}
+                  {currentProject.currency} {dailySpent.toLocaleString()}
                 </p>
               </div>
             </div>

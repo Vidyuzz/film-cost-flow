@@ -18,6 +18,12 @@ import ShootDays from "./pages/ShootDays";
 import Crew from "./pages/Crew";
 import Props from "./pages/Props";
 import NotFound from "./pages/NotFound";
+import Auth from "./pages/Auth";
+import Profile from "./pages/Profile";
+import Projects from "./pages/Projects";
+import ProjectsNew from "./pages/ProjectsNew";
+import ProjectDetail from "./pages/ProjectDetail";
+import ProjectEdit from "./pages/ProjectEdit";
 import { storage } from "./lib/storage";
 
 const queryClient = new QueryClient();
@@ -35,6 +41,17 @@ const App = () => {
           <BrowserRouter>
             <Layout>
             <Routes>
+              {/* Auth & Profile Routes */}
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/profile" element={<Profile />} />
+              
+              {/* Projects Routes */}
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/projects/new" element={<ProjectsNew />} />
+              <Route path="/projects/:id" element={<ProjectDetail />} />
+              <Route path="/projects/:id/edit" element={<ProjectEdit />} />
+              
+              {/* Legacy Routes */}
               <Route path="/" element={<Dashboard />} />
               <Route path="/expenses" element={<Expenses />} />
               <Route path="/petty-cash" element={<PettyCash />} />
@@ -47,6 +64,7 @@ const App = () => {
               <Route path="/props" element={<Props />} />
               <Route path="/project/add-expense" element={<AddExpense />} />
               <Route path="/day/:id" element={<ProductionDayHub />} />
+              
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

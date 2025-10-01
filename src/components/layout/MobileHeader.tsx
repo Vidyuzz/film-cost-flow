@@ -28,7 +28,12 @@ interface Project {
   last_activity_at: string
 }
 
-export const MobileHeader = () => {
+interface MobileHeaderProps {
+  title?: string
+  showBack?: boolean
+}
+
+export const MobileHeader = ({ title, showBack }: MobileHeaderProps = {}) => {
   const [user, setUser] = useState<User | null>(null)
   const [recentProjects, setRecentProjects] = useState<Project[]>([])
   const navigate = useNavigate()
@@ -86,11 +91,22 @@ export const MobileHeader = () => {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center justify-between px-4">
-        <Link to="/" className="flex items-center space-x-2">
-          <div className="font-bold text-lg bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-            FilmFlow
-          </div>
-        </Link>
+        {showBack ? (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2"
+          >
+            ← {title || 'Back'}
+          </Button>
+        ) : (
+          <Link to="/" className="flex items-center space-x-2">
+            <div className="font-bold text-lg bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+              {title || 'FilmFlow'}
+            </div>
+          </Link>
+        )}
 
         <div className="flex items-center">
           {user ? (
